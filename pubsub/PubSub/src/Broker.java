@@ -33,6 +33,7 @@ public class Broker extends Node {
       this.terminal = terminal;
       socket = new DatagramSocket(port);
       listener.go();
+      System.out.println("Started Broker");
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -126,6 +127,7 @@ public class Broker extends Node {
   public synchronized void start() throws Exception {
     terminal.println("Waiting for contact");
     this.wait();
+    System.out.println("Contact waiting");
   }
 
   public void publishMessage(String contentString, String dest) throws IOException, InterruptedException {
@@ -158,6 +160,8 @@ public class Broker extends Node {
     try {
       Terminal terminal = new Terminal("Broker");
       Broker broker = new Broker(terminal, BROKER_PORT);
+      System.out.println("Broker started on " + Inet4Address.getLocalHost() + ":" + BROKER_PORT);
+
       broker.start();
     } catch (Exception e) {
       e.printStackTrace();

@@ -6,7 +6,7 @@ import java.util.ArrayList;
 public class Client extends Node {
   static final int DEFAULT_SRC_PORT = 50002;
   static final int DEFAULT_DST_PORT = 50001;
-  static final String DEFAULT_DST_NODE = "localhost";
+  static final String DEFAULT_DST_NODE = "broker";
 
   static final int HEADER_LENGTH = 2;
   static final int TYPE_POS = 0;

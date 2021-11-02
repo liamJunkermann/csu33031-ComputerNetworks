@@ -11,6 +11,8 @@ public abstract class Node {
   Node() {
     latch = new CountDownLatch(1);
     listener = new Listener();
+    listener.setDaemon(true);
+    listener.start();
   }
 
   public abstract void onReceipt(DatagramPacket packet);
@@ -25,9 +27,9 @@ public abstract class Node {
         latch.await();
 
         while(true) {
+          System.out.println("Packet Recieved");
           DatagramPacket packet = new DatagramPacket(new byte[PACKETSIZE], PACKETSIZE);
           socket.receive(packet);
-
           onReceipt(packet);
         }
       } catch (Exception e ) {
