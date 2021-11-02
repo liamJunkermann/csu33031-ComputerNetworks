@@ -3,7 +3,7 @@ import java.net.*;
 public class CAndC extends Node {
   static final int COMMAND_PORT = 50000; // Port of the command and control
   static final int BROKER_PORT = 50001; // Port of the broker
-  static final String DEFAULT_DST_NODE = "broker"; // Name of the host for the server
+  static final String DEFAULT_DST_NODE = "localhost"; // Name of the host for the server
 
   static final int HEADER_LENGTH = 2; // Fixed length of the header
   static final int TYPE_POS = 0; // Position of the type within the header
