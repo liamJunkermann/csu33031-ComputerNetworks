@@ -18,9 +18,9 @@ public class Controller extends Node {
     static final int DEST = 0;
     static final int IN = 1;
     static final int OUT = 2;
-    static final int ROUTER_ONE = 1;
-    static final int ROUTER_TWO = 2;
-    static final int ROUTER_THREE = 3;
+    static final int CONTROLLER_ONE = 1;
+    static final int CONTROLLER_TWO = 2;
+    static final int CONTROLLER_THREE = 3;
 
     static final int ACKCODE = 1;
     static final byte ACKPACKET = 10;
@@ -49,9 +49,9 @@ public class Controller extends Node {
                 terminal.println("Packet Received");
                 break;
             case ENDPOINT_ONE:
-                if (controllerNumber == ROUTER_THREE) {
+                if (controllerNumber == CONTROLLER_THREE) {
                     String content = sendAck(packet, data);
-                    sendPacket((byte) ROUTER_TWO, content, (InetSocketAddress) forwardingTable[ENDPOINT_ONE][OUT]);
+                    sendPacket((byte) CONTROLLER_TWO, content, (InetSocketAddress) forwardingTable[ENDPOINT_ONE][OUT]);
                 } else {
                     sendAck(packet, data);
                     packet.setSocketAddress((InetSocketAddress) forwardingTable[ENDPOINT_ONE][OUT]);
@@ -59,9 +59,10 @@ public class Controller extends Node {
                 }
                 break;
             case ENDPOINT_TWO:
-                if (controllerNumber == ROUTER_ONE) {
+                if (controllerNumber == CONTROLLER_ONE) {
                     String content = sendAck(packet, data);
-                    sendPacket((byte) ROUTER_THREE, content, (InetSocketAddress) forwardingTable[ENDPOINT_TWO][OUT]);
+                    sendPacket((byte) CONTROLLER_THREE, content,
+                            (InetSocketAddress) forwardingTable[ENDPOINT_TWO][OUT]);
                 } else {
                     sendAck(packet, data);
                     packet.setSocketAddress((InetSocketAddress) forwardingTable[ENDPOINT_TWO][OUT]);
@@ -132,23 +133,23 @@ public class Controller extends Node {
         forwardingTable[ENDPOINT_ONE][DEST] = ENDPOINT_TWO;
         forwardingTable[ENDPOINT_TWO][DEST] = ENDPOINT_ONE;
         switch (controllerNumber) {
-        case ROUTER_ONE:
+        case CONTROLLER_ONE:
             forwardingTable[ENDPOINT_ONE][IN] = new InetSocketAddress("ForwardingService", SERVICE_PORT);
-            forwardingTable[ENDPOINT_ONE][OUT] = new InetSocketAddress("RouterTwo", CONTROLLER_PORT);
-            forwardingTable[ENDPOINT_TWO][IN] = new InetSocketAddress("RouterTwo", CONTROLLER_PORT);
+            forwardingTable[ENDPOINT_ONE][OUT] = new InetSocketAddress("ControllerTwo", CONTROLLER_PORT);
+            forwardingTable[ENDPOINT_TWO][IN] = new InetSocketAddress("ControllerTwo", CONTROLLER_PORT);
             forwardingTable[ENDPOINT_TWO][OUT] = new InetSocketAddress("ForwardingService", SERVICE_PORT);
             break;
-        case ROUTER_TWO:
-            forwardingTable[ENDPOINT_ONE][IN] = new InetSocketAddress("RouterOne", CONTROLLER_PORT);
-            forwardingTable[ENDPOINT_ONE][OUT] = new InetSocketAddress("RouterThree", CONTROLLER_PORT);
-            forwardingTable[ENDPOINT_TWO][IN] = new InetSocketAddress("RouterThree", CONTROLLER_PORT);
-            forwardingTable[ENDPOINT_TWO][OUT] = new InetSocketAddress("RouterOne", SERVICE_PORT);
+        case CONTROLLER_TWO:
+            forwardingTable[ENDPOINT_ONE][IN] = new InetSocketAddress("ControllerOne", CONTROLLER_PORT);
+            forwardingTable[ENDPOINT_ONE][OUT] = new InetSocketAddress("ControllerThree", CONTROLLER_PORT);
+            forwardingTable[ENDPOINT_TWO][IN] = new InetSocketAddress("ControllerThree", CONTROLLER_PORT);
+            forwardingTable[ENDPOINT_TWO][OUT] = new InetSocketAddress("ControllerOne", SERVICE_PORT);
             break;
-        case ROUTER_THREE:
-            forwardingTable[ENDPOINT_ONE][IN] = new InetSocketAddress("RouterTwo", CONTROLLER_PORT);
+        case CONTROLLER_THREE:
+            forwardingTable[ENDPOINT_ONE][IN] = new InetSocketAddress("ControllerTwo", CONTROLLER_PORT);
             forwardingTable[ENDPOINT_ONE][OUT] = new InetSocketAddress("ForwardingService", SERVICE_PORT);
             forwardingTable[ENDPOINT_TWO][IN] = new InetSocketAddress("ForwardingService", SERVICE_PORT);
-            forwardingTable[ENDPOINT_TWO][OUT] = new InetSocketAddress("RouterTwo", CONTROLLER_PORT);
+            forwardingTable[ENDPOINT_TWO][OUT] = new InetSocketAddress("ControllerTwo", CONTROLLER_PORT);
             break;
         default:
             break;
@@ -158,8 +159,14 @@ public class Controller extends Node {
     public static void main(String[] args) {
         try {
             Terminal terminal = new Terminal("Controller");
-            String input = terminal.read("Controller Designation number");
-            int designation = Integer.parseInt(input);
+            int designation;
+            if (args.length == 0) {
+                String input = terminal.read("Controller Designation number");
+                designation = Integer.parseInt(input);
+            } else {
+                designation = Integer.parseInt(args[0]);
+            }
+            terminal.println("Controller " + designation);
             Controller r = new Controller(terminal, CONTROLLER_PORT, designation);
             r.start();
         } catch (Exception e) {

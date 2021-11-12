@@ -69,9 +69,11 @@ public class Application extends Node {
       message = terminal.read("Message to send");
 
       data = new byte[HEADER_LENGTH + message.length()];
-      if (destination.equalsIgnoreCase("endpoint1") || destination.equalsIgnoreCase("endpointone")) {
+      if (destination.equalsIgnoreCase("endpoint1") || destination.equalsIgnoreCase("endpointone")
+          || destination.equalsIgnoreCase("1")) {
         data[TYPE] = ENDPOINT_TWO;
-      } else if (destination.equalsIgnoreCase("endpoint2") || destination.equalsIgnoreCase("endpointtwo")) {
+      } else if (destination.equalsIgnoreCase("endpoint2") || destination.equalsIgnoreCase("endpointtwo")
+          || destination.equalsIgnoreCase("2")) {
         data[TYPE] = ENDPOINT_ONE;
       } else {
         data[TYPE] = ERROR;

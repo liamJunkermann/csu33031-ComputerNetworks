@@ -40,6 +40,8 @@ public class ForwardingService extends Node {
       byte[] data;
       String content;
       data = packet.getData();
+      // System.out.println(data.toString());
+      terminal.println("Type " + String.valueOf(data[TYPE]));
       switch (data[TYPE]) {
       case ACK:
         terminal.println("Packet Received");
