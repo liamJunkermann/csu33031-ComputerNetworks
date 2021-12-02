@@ -1,8 +1,7 @@
 import java.net.*;
 
 public class Application extends Node {
-  static final int APPLICATION_PORT = 50000;
-  static final int SERVICE_PORT = 51510;
+  static final int DEFAULT_PORT = 51510;
 
   static final int TYPE = 0;
   static final int LENGTH = 1;
@@ -10,15 +9,17 @@ public class Application extends Node {
 
   static final byte ENDPOINT_ONE = 0;
   static final byte ENDPOINT_TWO = 1;
-  static final byte ERROR = 5; // for now
-  static final byte ACK = 6;
+  static final byte ERROR = 7;
+  static final byte ACK = 9;
 
   static final int ACKCODE = 1;
   static final byte ACKPACKET = 10;
 
-  private InetSocketAddress forwardingService = new InetSocketAddress("ForwardingService", SERVICE_PORT);
+  private InetSocketAddress forwardingService = new InetSocketAddress("ForwardingService", DEFAULT_PORT);
   private String destination;
   private String message;
+
+  private boolean init = true;
 
   Terminal terminal;
 
@@ -34,6 +35,7 @@ public class Application extends Node {
 
   public synchronized void onReceipt(DatagramPacket packet) {
     try {
+      init = false;
       byte[] data;
       data = packet.getData();
       switch (data[TYPE]) {
@@ -42,12 +44,12 @@ public class Application extends Node {
         break;
       case ENDPOINT_ONE:
         message = sendAck(packet, data);
-        terminal.println("Endpoint Two Says: " + message);
+        terminal.println("Endpoint One said: " + message);
         start();
         break;
       case ENDPOINT_TWO:
         message = sendAck(packet, data);
-        terminal.println("Endpoint One Says: " + message);
+        terminal.println("Endpoint Two said: " + message);
         start();
         break;
       default:
@@ -65,7 +67,7 @@ public class Application extends Node {
     try {
       byte[] data;
       DatagramPacket packet;
-      destination = terminal.read("Packet Destination");
+      destination = terminal.read("Packet Destination (EndpointOne or EndpointTwo)");
       message = terminal.read("Message to send");
 
       data = new byte[HEADER_LENGTH + message.length()];
@@ -79,12 +81,15 @@ public class Application extends Node {
         data[TYPE] = ERROR;
       }
       data[LENGTH] = (byte) message.length();
+      System.out.println(data[TYPE]);
       System.arraycopy(message.getBytes(), 0, data, HEADER_LENGTH, message.length());
       packet = new DatagramPacket(data, data.length);
       packet.setSocketAddress(forwardingService);
       socket.send(packet);
-      while (true) {
-        this.wait();
+      if (init) {
+        while (true) {
+          this.wait();
+        }
       }
     } catch (Exception e) {
       e.printStackTrace();
@@ -113,8 +118,12 @@ public class Application extends Node {
 
   public static void main(String[] args) {
     try {
-      Terminal terminal = new Terminal("App");
-      Application app = new Application(terminal, APPLICATION_PORT);
+      String terminalTitle = "App";
+      if (args.length != 0) {
+        terminalTitle += " " + args[0];
+      }
+      Terminal terminal = new Terminal(terminalTitle);
+      Application app = new Application(terminal, DEFAULT_PORT);
       app.start();
     } catch (Exception e) {
       e.printStackTrace();

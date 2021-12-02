@@ -1,9 +1,7 @@
 import java.net.*;
 
 public class ForwardingService extends Node {
-  static final int APPLICATION_PORT = 50000;
-  static final int SERVICE_PORT = 51510;
-  static final int CONTROLLER_PORT = 51510;
+  static final int DEFAULT_PORT = 51510;
 
   static final int TYPE = 0;
   static final int LENGTH = 1;
@@ -11,17 +9,16 @@ public class ForwardingService extends Node {
 
   static final byte ENDPOINT_ONE = 0;
   static final byte ENDPOINT_TWO = 1;
-  static final byte CONTROLLER_ONE = 1;
-  static final byte CONTROLLER_TWO = 2;
-  static final byte CONTROLLER_THREE = 3;
-  static final byte ERROR = 5; // for now
-  static final byte ACK = 6;
+  static final byte ROUTER_FIVE = 5;
+  static final byte ROUTER_SIX = 6;
+  static final byte ERROR = 7;
+  static final byte ACK = 9;
 
   static final int ACKCODE = 1;
   static final byte ACKPACKET = 10;
 
-  private InetSocketAddress router;
-  private InetSocketAddress application;
+  private InetSocketAddress router_add;
+  private InetSocketAddress application_add;
 
   Terminal terminal;
 
@@ -40,7 +37,6 @@ public class ForwardingService extends Node {
       byte[] data;
       String content;
       data = packet.getData();
-      // System.out.println(data.toString());
       terminal.println("Type " + String.valueOf(data[TYPE]));
       switch (data[TYPE]) {
       case ACK:
@@ -48,30 +44,27 @@ public class ForwardingService extends Node {
         break;
       case ENDPOINT_ONE:
         content = sendAck(packet, data);
-        router = new InetSocketAddress("ControllerOne", CONTROLLER_PORT);
-        application = new InetSocketAddress("EndpointTwo", packet.getPort());
-        terminal.println("EndpointOne");
-        packet.setSocketAddress(router);
+        router_add = new InetSocketAddress("RouterOne", DEFAULT_PORT);
+        application_add = new InetSocketAddress("EndpointTwo", DEFAULT_PORT);
+        terminal.println("From EndpointOne");
+        packet.setSocketAddress(router_add);
         socket.send(packet);
         break;
       case ENDPOINT_TWO:
         content = sendAck(packet, data);
-        router = new InetSocketAddress("ControllerThree", CONTROLLER_PORT);
-        application = new InetSocketAddress("EndpointOne", packet.getPort());
-        terminal.println("EndpointTwo");
-        packet.setSocketAddress(router);
+        router_add = new InetSocketAddress("RouterTwo", DEFAULT_PORT);
+        application_add = new InetSocketAddress("EndpointOne", DEFAULT_PORT);
+        terminal.println("From EndpointTwo");
+        packet.setSocketAddress(router_add);
         socket.send(packet);
         break;
-      case CONTROLLER_TWO:
+      case ROUTER_FIVE:
         content = sendAck(packet, data);
-        terminal.println("ControllerOne");
-        sendPacket(ENDPOINT_TWO, content, application);
-        socket.send(packet);
+        sendPacket(ENDPOINT_ONE, content, application_add);
         break;
-      case CONTROLLER_THREE:
+      case ROUTER_SIX:
         content = sendAck(packet, data);
-        terminal.println("ControllerThree");
-        sendPacket(ENDPOINT_ONE, content, application);
+        sendPacket(ENDPOINT_TWO, content, application_add);
         break;
       case ERROR:
         content = sendAck(packet, data);
@@ -88,7 +81,9 @@ public class ForwardingService extends Node {
 
   public synchronized void start() {
     try {
-      this.wait();
+      terminal.println("Forwarding Service starting");
+      while (true)
+        this.wait();
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -133,7 +128,7 @@ public class ForwardingService extends Node {
   public static void main(String[] args) {
     try {
       Terminal terminal = new Terminal("Forwarding Service");
-      ForwardingService fs = new ForwardingService(terminal, SERVICE_PORT);
+      ForwardingService fs = new ForwardingService(terminal, DEFAULT_PORT);
       fs.start();
     } catch (Exception e) {
       e.printStackTrace();
